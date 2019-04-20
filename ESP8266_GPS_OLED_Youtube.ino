@@ -1,36 +1,38 @@
-#include <TinyGPS++.h>                                  // Tiny GPS Plus Library
-#include <SoftwareSerial.h>                             // Software Serial Library so we can use other Pins for communication with the GPS module
+//#include <Adafruit_SSD1306.h>
 
-#include <Adafruit_ssd1306syp.h>                        // Adafruit oled library for display
-Adafruit_ssd1306syp display(4,5);                       // OLED display (SDA to Pin 4), (SCL to Pin 5)
+#include <TinyGPS++.h>                                  // Tiny GPS Plus Library
+//#include <SoftwareSerial.h>                             // Software Serial Library so we can use other Pins for communication with the GPS module
+#include <Wire.h>
+#include <Adafruit_SSD1306.h>                        // Adafruit oled library for display
+Adafruit_SSD1306 display(-1);                       // OLED display (SDA to Pin 4), (SCL to Pin 5)
 
 static const int RXPin = 12, TXPin = 13;                // Ublox 6m GPS module to pins 12 and 13
 static const uint32_t GPSBaud = 9600;                   // Ublox GPS default Baud Rate is 9600
 
-const double Home_LAT = **.******;                      // Your Home Latitude
-const double Home_LNG = **.******;                     // Your Home Longitude
+const double Home_LAT = 32.33333;                      // Your Home Latitude
+const double Home_LNG = 81.33333;                     // Your Home Longitude
 
 TinyGPSPlus gps;                                        // Create an Instance of the TinyGPS++ object called gps
-SoftwareSerial ss(RXPin, TXPin);                        // The serial connection to the GPS device
-
+//SoftwareSerial ss(RXPin, TXPin);                        // The serial connection to the GPS device
+#define ss Serial
 void setup()
-{  
-  display.initialize();                                 // Initialize OLED display  
-  display.clear();                                      // Clear OLED display
-  display.setTextSize(1);                               // Set OLED text size to small
+{  Wire.begin(5,4);
+   display.begin(SSD1306_SWITCHCAPVCC, 0x3c);                             // Initialize OLED display  
+ display.clearDisplay();
+ display.setTextSize(1);                               // Set OLED text size to small
   display.setTextColor(WHITE);                          // Set OLED color to White
   display.setCursor(0,0);                               // Set cursor to 0,0
   display.println("GPS example");  
   display.println(TinyGPSPlus::libraryVersion());
-  display.update();                                     // Update display
+  display.display();                                     // Update display
   delay(1500);                                          // Pause 1.5 seconds  
   ss.begin(GPSBaud);                                    // Set Software Serial Comm Speed to 9600    
 }
 
 void loop()
 {   
-  display.clear();
-  display.setCursor(0,0); 
+ display.clearDisplay();
+ display.setCursor(0,0); 
   display.print("Latitude  : ");
   display.println(gps.location.lat(), 5);
   display.print("Longitude : ");
@@ -54,7 +56,7 @@ void loop()
   unsigned long Distance_To_Home = (unsigned long)TinyGPSPlus::distanceBetween(gps.location.lat(),gps.location.lng(),Home_LAT, Home_LNG);
   display.print("KM to Home: ");                        // Have TinyGPS Calculate distance to home and display it
   display.print(Distance_To_Home);
-  display.update();                                     // Update display
+  display.display();                                     // Update display
   delay(200); 
   
   smartDelay(500);                                      // Run Procedure smartDelay
@@ -72,8 +74,6 @@ static void smartDelay(unsigned long ms)                // This custom version o
       gps.encode(ss.read());
   } while (millis() - start < ms);
 }
-
-
 
 
 
